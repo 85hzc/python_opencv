@@ -1,0 +1,13 @@
+#!/usr/bin/python3
+
+import sys
+import calc
+a=5
+b=3
+print ('-' * 15)
+calc.add(a,b)
+calc.sqrt(a,b)
+calc.subduction(a,b)
+calc.multiplication(a,b)
+print ('-' * 15)
+
