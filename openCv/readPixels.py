@@ -3,10 +3,12 @@ import argparse
 import cv2
 import numpy as np
 import random
+from PIL import Image as PImage
 
 refPt=[]
 jihe=[]
 cropping=False
+ss="hzc yab\r\n"
 
 def ramdom_pixels(frame):
 	height = frame.shape[0]
@@ -16,7 +18,7 @@ def ramdom_pixels(frame):
 		j = random.randint(0,weight-1)
 		color = (random.randrange(256),random.randrange(256),random.randrange(256))
 		frame[i,j] = color
-	
+	print("ramdom ok")
 	#cv2.imshow("Noize", frame)
 	#cv2.waitKey(0)
 
@@ -30,53 +32,85 @@ def access_pixels(frame):
 	for row in range(height):
 		for col in range(weight):
 			for c in range(channels):
-				pv = frame[row, col, c]     
+				pv = frame[row, col, c]
 				frame[row, col, c] = 255 - pv
 	#cv2.imshow("fanxiang", frame)
+	print("reverse ok")
 
+def record_pixels(frame):
+
+	height = frame.shape[0]
+	weight = frame.shape[1]
+	channels = frame.shape[2]
+	f = open('output.txt',mode='w+')
+	for row in range(height):
+		for col in range(weight):
+			#if col%8 == 0:
+			#	f.write('\n')
+			jihe.append(list(frame[row, col]))
+			#for ii in jihe1:
+
+	f.write('['+','.join(str(i) for i in jihe)+']')
+	#s = " ".join(jihe)
+	f.close()
+	print("record ok")
+
+def getImagePix(strlist,pixelX = 1,pixelY = 1):
+
+    data = strlist[pixelX,pixelY]
+    img_src.close()
+    return data
+	
+def cutVideo(videoPath):
+
+	vc = cv2.VideoCapture(videoPath)
+	c=1
+	
+	if vc.isOpened():
+		rval , frame = vc.read()
+	else:
+		rval = False
+	
+	timeF = 100
+	while rval:
+		rval, frame = vc.read()
+		if(c%timeF == 0): #1000 frame per cut
+			print "%d.jpg"%c
+			cv2.imwrite('image/'+str(c) + '.jpg',frame) #save
+		c = c + 1
+		cv2.waitKey(1)
+	
+	vc.release()
 
 def click_and_crop(event,x,y,flags,param):
+
     global refPt,cropping
     if event == cv2.EVENT_LBUTTONDOWN:
         refPt=[(x,y)]
         print(x,y)
         cropping=True
-        
-        px=image[10,10]
+        #px=image[x,y]
+        px = str_strlist[x,y]
         print px
-        '''blue=clone[10,10,0]
-        print blue
-        green=clone[10,10,1]
-        print green
-        red=clone[10,10,2]
-        print red'''
-        '''h, w, _ = image.shape
-
-        print(h,w)'''
-        '''
-        for a in range(h):
-            for b in range(w):
-                print(image[a,b])
-                jihe.append(list(image[a,b]))
-                #num +=1'''
-
     elif event == cv2.EVENT_LBUTTONUP:
         refPt.append((x,y))
         print(x,y)
         cropping=False
-        
         cv2.rectangle(image,refPt[0],refPt[1],(0,0,200),2)
         cv2.imshow("huangzhicheng reseach",image)
 
 ap = argparse.ArgumentParser()
-ap.add_argument("-i", "--image", required=True, help="Path to the image")
+ap.add_argument("--image", required=True, help="Path to the image")
+ap.add_argument("--video", required=True, help="Path to the video")
 args = vars(ap.parse_args())
 
 image = cv2.imread(args["image"])
 clone = image.copy()
 cv2.namedWindow("huangzhicheng reseach")
 cv2.setMouseCallback("huangzhicheng reseach", click_and_crop)
-
+img_src = PImage.open(args["image"])
+img_src = img_src.convert('RGBA')# R G B A Yes OK!
+str_strlist = img_src.load()
 
 while True:
 	cv2.imshow("huangzhicheng reseach", image)
@@ -88,15 +122,21 @@ while True:
 		access_pixels(image)
 	elif key == ord("v"):
 		ramdom_pixels(image)
+	elif key == ord("d"):
+		record_pixels(image)
+	elif key == ord("s"):
+		print(getImagePix(str_strlist,10,10))
 	elif key == ord("c"):
+		cutVideo(args["video"])
+	elif key == ord("q"):
 		break
 
-if len(refPt) == 2:
+if len(refPt) == 2 and refPt[0] != refPt[1]:
 	roi = clone[refPt[0][1]:refPt[1][1], refPt[0][0]:refPt[1][0]]
 	cv2.imshow("ROI", roi)
 	
 	h, w, _ = roi.shape
-	print("----",h,w,"----")
+	print "----",h,w,'----'
 	for a in range(h):
 		for b in range(w):
 			#print(roi[a,b])
