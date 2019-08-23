@@ -82,6 +82,7 @@ def convertImagePix():
 		f = open(outputName,mode='w+')
 		
 		img_src = Image.open(imgName)
+		#img_src = img_src.convert('L')#white light only
 		img_src = img_src.convert('RGB')#RGBA  R G B A Yes OK!
 		img_src = img_src.resize((size,size),0)
 		#img_src.show()
