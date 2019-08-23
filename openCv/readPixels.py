@@ -4,11 +4,11 @@ import cv2
 import numpy as np
 import random
 from PIL import Image
+import glob, os
 
 refPt=[]
 jihe=[]
 cropping=False
-ss="hzc yab\r\n"
 
 '''
 size = 128, 128
@@ -84,20 +84,19 @@ def convertImagePix():
 		img_src = Image.open(imgName)
 		img_src = img_src.convert('RGB')#RGBA  R G B A Yes OK!
 		img_src = img_src.resize((size,size),0)
-		img_src.show()
-		str_strlist = img_src.load()
-		#str_strlist.resize(16,16)
+		#img_src.show()
+		strlist = img_src.load()
 		
 		listAll = []
 		for x in range(size):
 			for y in range(size):
 				pixel = []
 				#print("x=%d,y=%d"%(x,y))
-				pixel = str_strlist[y,x]
+				pixel = strlist[y,x]
 				pixelHex = ((pixel[0]<<16)|(pixel[1]<<8)|(pixel[2]))
 				
 				#print "%d %d 0x%x"%(y,x,pixelHex)
-				#listAll.append(list(str_strlist[y, x]))
+				#listAll.append(list(strlist[y, x]))
 				#listAll.append(pixelHex)
 				if(pixelHex==0xF7F9F6):
 					if y==size-1:
@@ -110,13 +109,10 @@ def convertImagePix():
 					else:
 						listAll.append('1,')
 
-
-
 		#f.write('{'+','.join(str(i) for i in listAll)+'}')
 		#f.write(','.join(str(i) for i in listAll))
 		f.write(''.join(str(i) for i in listAll))
 		f.close()
-
 
 def cutVideo(videoPath):
 
