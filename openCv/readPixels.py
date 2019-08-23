@@ -3,12 +3,21 @@ import argparse
 import cv2
 import numpy as np
 import random
-from PIL import Image as PImage
+from PIL import Image
 
 refPt=[]
 jihe=[]
 cropping=False
 ss="hzc yab\r\n"
+
+'''
+size = 128, 128
+for infile in glob.glob("*.jpg"):
+    file, ext = os.path.splitext(infile)
+    im = Image.open(infile)
+    im.thumbnail(size, Image.ANTIALIAS)
+    im.save(file + ".thumbnail", "JPEG")
+'''
 
 def ramdom_pixels(frame):
 	height = frame.shape[0]
@@ -57,29 +66,77 @@ def record_pixels(frame):
 
 def getImagePix(strlist,pixelX = 1,pixelY = 1):
 
-    data = strlist[pixelX,pixelY]
-    img_src.close()
-    return data
+	data = strlist[pixelX,pixelY]
+	img_src.close()
+	return data
 	
+def convertImagePix():
+	
+	size = 32
+	pageTotal = 52
+	for a in range(pageTotal):
+		#print(a)
+		imgName = "image/image-%d%s"%(a,'.jpg')
+		outputName = "output-%d%s"%(a,'.txt')
+		print(imgName,outputName)
+		f = open(outputName,mode='w+')
+		
+		img_src = Image.open(imgName)
+		img_src = img_src.convert('RGB')#RGBA  R G B A Yes OK!
+		img_src = img_src.resize((size,size),0)
+		img_src.show()
+		str_strlist = img_src.load()
+		#str_strlist.resize(16,16)
+		
+		listAll = []
+		for x in range(size):
+			for y in range(size):
+				pixel = []
+				#print("x=%d,y=%d"%(x,y))
+				pixel = str_strlist[y,x]
+				pixelHex = ((pixel[0]<<16)|(pixel[1]<<8)|(pixel[2]))
+				
+				#print "%d %d 0x%x"%(y,x,pixelHex)
+				#listAll.append(list(str_strlist[y, x]))
+				#listAll.append(pixelHex)
+				if(pixelHex==0xF7F9F6):
+					if y==size-1:
+						listAll.append('0,\n')
+					else:
+						listAll.append('0,')
+				else:
+					if y==size-1:
+						listAll.append('1,\n')
+					else:
+						listAll.append('1,')
+
+
+
+		#f.write('{'+','.join(str(i) for i in listAll)+'}')
+		#f.write(','.join(str(i) for i in listAll))
+		f.write(''.join(str(i) for i in listAll))
+		f.close()
+
+
 def cutVideo(videoPath):
 
 	vc = cv2.VideoCapture(videoPath)
-	c=1
-	
+	c=0
+
 	if vc.isOpened():
 		rval , frame = vc.read()
 	else:
 		rval = False
-	
+
 	timeF = 100
 	while rval:
 		rval, frame = vc.read()
 		if(c%timeF == 0): #1000 frame per cut
-			print "%d.jpg"%c
-			cv2.imwrite('image/'+str(c) + '.jpg',frame) #save
+			print "image-%d.jpg"%c
+			cv2.imwrite('image/image-'+str(c/100) + '.jpg',frame) #save
 		c = c + 1
 		cv2.waitKey(1)
-	
+
 	vc.release()
 
 def click_and_crop(event,x,y,flags,param):
@@ -108,7 +165,7 @@ image = cv2.imread(args["image"])
 clone = image.copy()
 cv2.namedWindow("huangzhicheng reseach")
 cv2.setMouseCallback("huangzhicheng reseach", click_and_crop)
-img_src = PImage.open(args["image"])
+img_src = Image.open(args["image"])
 img_src = img_src.convert('RGBA')# R G B A Yes OK!
 str_strlist = img_src.load()
 
@@ -124,8 +181,10 @@ while True:
 		ramdom_pixels(image)
 	elif key == ord("d"):
 		record_pixels(image)
-	elif key == ord("s"):
+	elif key == ord("g"):
 		print(getImagePix(str_strlist,10,10))
+	elif key == ord("s"):
+		print(convertImagePix())
 	elif key == ord("c"):
 		cutVideo(args["video"])
 	elif key == ord("q"):
