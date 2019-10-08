@@ -77,7 +77,7 @@ def convertImagePix():
 	for a in range(pageTotal):
 		#print(a)
 		imgName = "image/image-%d%s"%(a,'.jpg')
-		outputName = "output-%d%s"%(a,'.txt')
+		outputName = "eplos/o-%d%s"%(a,'.txt')
 		print(imgName,outputName)
 		f = open(outputName,mode='w+')
 		
@@ -99,7 +99,7 @@ def convertImagePix():
 				#print "%d %d 0x%x"%(y,x,pixelHex)
 				#listAll.append(list(strlist[y, x]))
 				#listAll.append(pixelHex)
-				if(pixelHex==0xF7F9F6):
+				if(pixelHex>=0xF7F9F6):
 					if y==size-1:
 						listAll.append('0,\n')
 					else:
@@ -110,6 +110,59 @@ def convertImagePix():
 					else:
 						listAll.append('1,')
 
+		#f.write('{'+','.join(str(i) for i in listAll)+'}')
+		#f.write(','.join(str(i) for i in listAll))
+		f.write(''.join(str(i) for i in listAll))
+		f.close()
+
+
+def convertImagePixHex():
+	
+	row = 24
+	col = 48
+	pageTotal = 52
+	for a in range(pageTotal):
+		#print(a)
+		imgName = "image/image-%d%s"%(a,'.jpg')
+		outputName = "ws2801/o-%d%s"%(a,'.txt')
+		print(imgName,outputName)
+		f = open(outputName,mode='w+')
+		
+		img_src = Image.open(imgName)
+		#img_src = img_src.convert('L')#white light only
+		img_src = img_src.convert('RGB')#RGBA  R G B A Yes OK!
+		img_src = img_src.resize((col,row),0)
+		#img_src.show()
+		strlist = img_src.load()
+		
+		listAll = []
+		for x in range(row):
+			for y in range(col):
+				pixel = []
+				#print("x=%d,y=%d"%(x,y))
+				pixel = strlist[y,x]
+				pixelHex = ((pixel[0]<<16)|(pixel[1]<<8)|(pixel[2]))
+				
+				#print "%d %d 0x%x"%(y,x,pixelHex)
+				#listAll.append(list(strlist[y, x]))
+				listAll.append(pixelHex)
+				if y==col-1:
+					listAll.append(',\n')
+				else:
+					listAll.append(',')
+
+				'''
+				if(pixelHex>=0xF7F9F6):
+					if y==size-1:
+						listAll.append('0,\n')
+					else:
+						listAll.append('0,')
+				else:
+					if y==size-1:
+						listAll.append('1,\n')
+					else:
+						listAll.append('1,')
+				'''
 		#f.write('{'+','.join(str(i) for i in listAll)+'}')
 		#f.write(','.join(str(i) for i in listAll))
 		f.write(''.join(str(i) for i in listAll))
@@ -180,8 +233,10 @@ while True:
 		record_pixels(image)
 	elif key == ord("g"):
 		print(getImagePix(str_strlist,10,10))
-	elif key == ord("s"):
+	elif key == ord("e"):
 		print(convertImagePix())
+	elif key == ord("w"):
+		print(convertImagePixHex())
 	elif key == ord("c"):
 		cutVideo(args["video"])
 	elif key == ord("q"):
