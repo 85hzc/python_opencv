@@ -5,10 +5,12 @@ import numpy as np
 import random
 from PIL import Image
 import glob, os
+import struct
 
 refPt=[]
 jihe=[]
 cropping=False
+rootdir = "image"
 
 '''
 size = 128, 128
@@ -73,13 +75,22 @@ def getImagePix(strlist,pixelX = 1,pixelY = 1):
 def convertImagePix():
 	
 	size = 32
-	pageTotal = 52
+	list = os.listdir(rootdir)
+	pageTotal = len(list)
+
+	print("pageTotal=%d" % pageTotal)
 	for a in range(pageTotal):
-		#print(a)
+	#for a in range(0, len(list)):
+
+		#path = os.path.join(rootdir, list[a])
+		#print path
+		#if os.path.isfile(path):
+
 		imgName = "image/image-%d%s"%(a,'.jpg')
-		outputName = "eplos/o-%d%s"%(a,'.txt')
+		outputName = "eplos/o-%d%s"%(a,'.dat')
 		print(imgName,outputName)
-		f = open(outputName,mode='w+')
+		#f = open(outputName,mode='wb+')
+		f = open(outputName,mode='w')
 		
 		img_src = Image.open(imgName)
 		#img_src = img_src.convert('L')#white light only
@@ -89,6 +100,7 @@ def convertImagePix():
 		strlist = img_src.load()
 		
 		listAll = []
+		strfile = ''
 		for x in range(size):
 			for y in range(size):
 				pixel = []
@@ -99,6 +111,7 @@ def convertImagePix():
 				#print "%d %d 0x%x"%(y,x,pixelHex)
 				#listAll.append(list(strlist[y, x]))
 				#listAll.append(pixelHex)
+				'''
 				if(pixelHex>=0xF7F9F6):
 					if y==size-1:
 						listAll.append('0,\n')
@@ -109,10 +122,39 @@ def convertImagePix():
 						listAll.append('1,\n')
 					else:
 						listAll.append('1,')
-
+				'''
+				#print(pixelHex)
+				#if(pixelHex>=0xF7F9F6):
+				if(pixelHex==0xFFFFFF):
+					if y==size-1:
+						strfile = strfile + ('0,\n')
+					else:
+						strfile = strfile + ('0,')
+				else:
+					if y==size-1:
+						strfile = strfile + ('1,\n')
+					else:
+						strfile = strfile + ('1,')
+				
+		'''
+		for i in listAll:
+			#print(str(i))
+			aaa = struct.pack('p',str(i))
+			f.write(aaa)
+		'''
+		'''
+		strstr = ''.join(str(i) for i in listAll)
+		#aaa = str.decode(strstr)
+		aaa = struct.pack('p',strstr)
+		f.write(aaa)
+		'''
+		
+		#  str =  "".join(list)
+		f.write(strfile)
 		#f.write('{'+','.join(str(i) for i in listAll)+'}')
-		#f.write(','.join(str(i) for i in listAll))
-		f.write(''.join(str(i) for i in listAll))
+		#f.write(''.join(str(i) for i in listAll))
+		#f.write(str.encode('').join(str(i) for i in listAll))
+		#f.writelines(str.encode(''.join(str(i) for i in listAll)))
 		f.close()
 
 
@@ -120,11 +162,19 @@ def convertImagePixHex():
 	
 	row = 24
 	col = 48
-	pageTotal = 52
+	list = os.listdir(rootdir)
+	pageTotal = len(list)
+
+	print("pageTotal=%d" % pageTotal)
 	for a in range(pageTotal):
-		#print(a)
+	#for a in range(0, len(list)):
+
+		#path = os.path.join(rootdir, list[a])
+		#print path
+		#if os.path.isfile(path):
+
 		imgName = "image/image-%d%s"%(a,'.jpg')
-		outputName = "ws2801/o-%d%s"%(a,'.txt')
+		outputName = "ws2801/o-%d%s"%(a,'.dat')
 		print(imgName,outputName)
 		f = open(outputName,mode='w+')
 		
@@ -145,47 +195,63 @@ def convertImagePixHex():
 				
 				#print "%d %d 0x%x"%(y,x,pixelHex)
 				#listAll.append(list(strlist[y, x]))
-				listAll.append(pixelHex)
+				#listAll.append(pixelHex)
+				'''
+				listAll.append(pixel[0])
+				listAll.append(pixel[1])
+				listAll.append(pixel[2])
+				'''
+				aaa = struct.pack('l',(pixel[0]))
+				#print(bytes.decode(aaa,errors='ignore')+' ')
+				f.write(bytes.decode(aaa,'utf-8', errors='ignore'))
+				aaa = struct.pack('l',(pixel[1]))
+				#print(bytes.decode(aaa,errors='ignore')+' ')
+				f.write(bytes.decode(aaa,'utf-8', errors='ignore'))
+				aaa = struct.pack('l',(pixel[2]))
+				#print(bytes.decode(aaa, errors='ignore')+' ')
+				f.write(bytes.decode(aaa,'utf-8', errors='ignore'))
+				#print('\n')
+				'''
 				if y==col-1:
 					listAll.append(',\n')
 				else:
 					listAll.append(',')
-
 				'''
-				if(pixelHex>=0xF7F9F6):
-					if y==size-1:
-						listAll.append('0,\n')
-					else:
-						listAll.append('0,')
-				else:
-					if y==size-1:
-						listAll.append('1,\n')
-					else:
-						listAll.append('1,')
-				'''
+		'''
+		for i in listAll:
+			#print(str(i)+' ')
+			aaa = struct.pack('p',str(i))
+			f.write(aaa)
+		'''
 		#f.write('{'+','.join(str(i) for i in listAll)+'}')
-		#f.write(','.join(str(i) for i in listAll))
-		f.write(''.join(str(i) for i in listAll))
+		#f.write(''.join(str(i) for i in listAll))
+		#f.write(''.join(bytes(i) for i in listAll))
 		f.close()
 
 def cutVideo(videoPath):
 
+	c = 0
+	#global pageTotal
+
 	vc = cv2.VideoCapture(videoPath)
-	c=0
 
 	if vc.isOpened():
 		rval , frame = vc.read()
 	else:
 		rval = False
 
-	timeF = 100
+	timeF = 3
 	while rval:
-		rval, frame = vc.read()
+		
 		if(c%timeF == 0): #1000 frame per cut
-			print "image-%d.jpg"%c
-			cv2.imwrite('image/image-'+str(c/100) + '.jpg',frame) #save
+			print("image-%s.jpg"%str(c//timeF))
+			cv2.imwrite('image/image-'+str(c//timeF) + '.jpg',frame) #save
+
 		c = c + 1
+		#pageTotal = c/timeF + 1
 		cv2.waitKey(1)
+
+		rval, frame = vc.read()
 
 	vc.release()
 
@@ -198,7 +264,7 @@ def click_and_crop(event,x,y,flags,param):
         cropping=True
         #px=image[x,y]
         px = str_strlist[x,y]
-        print px
+        print(px)
     elif event == cv2.EVENT_LBUTTONUP:
         refPt.append((x,y))
         print(x,y)
@@ -247,7 +313,7 @@ if len(refPt) == 2 and refPt[0] != refPt[1]:
 	cv2.imshow("ROI", roi)
 	
 	h, w, _ = roi.shape
-	print "----",h,w,'----'
+	print("----",h,w,'----')
 	for a in range(h):
 		for b in range(w):
 			#print(roi[a,b])
